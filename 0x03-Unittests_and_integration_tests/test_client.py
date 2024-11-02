@@ -78,6 +78,22 @@ class TestGithubOrgClient(unittest.TestCase):
                 "https://api.github.com/orgs/test/repos"
             )
 
+    @parameterized.expand([
+        ({"license": {"key": "my_license"}}, "my_license", True),
+        ({"license": {"key": "other_license"}}, "my_license", False)
+    ])
+    def test_has_license(self, repo, license_key, expected):
+        """Unit-test for GithubOrgClient.has_license
+
+        Args:
+            repo: Dictionary representing a repository
+            license_key: License key to check for
+            expected: Expected return value
+        """
+        client = GithubOrgClient("test")
+        has_license = client.has_license(repo, license_key)
+        self.assertEqual(has_license, expected)
+
 
 if __name__ == '__main__':
     unittest.main()
