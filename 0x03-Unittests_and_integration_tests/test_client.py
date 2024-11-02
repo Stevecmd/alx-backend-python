@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """ Test client module """
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, PropertyMock
 from parameterized import parameterized
 from client import GithubOrgClient
 from utils import get_json
@@ -43,13 +43,20 @@ class TestGithubOrgClient(unittest.TestCase):
                 expected
             )
 
-    @patch('client.get_json',
-           return_value=[
-               {"name": "repo1"},
-               {"name": "repo2"}
-           ])
+    @patch('client.get_json')
     def test_public_repos(self, mock_get_json):
-        """Test GithubOrgClient.public_repos"""
+        """Test GithubOrgClient.public_repos method
+
+        Args:
+            mock_get_json: Mocked get_json function
+        """
+        test_payload = [
+            {"name": "repo1"},
+            {"name": "repo2"},
+            {"name": "repo3"}
+        ]
+        mock_get_json.return_value = test_payload
+
         with patch.object(
             GithubOrgClient,
             '_public_repos_url',
@@ -57,9 +64,16 @@ class TestGithubOrgClient(unittest.TestCase):
             return_value="https://api.github.com/orgs/test/repos"
         ) as mock_public_repos_url:
             client = GithubOrgClient("test")
-            expected_repos = ["repo1", "repo2"]
-            self.assertEqual(client.public_repos(), expected_repos)
+            repos = client.public_repos()
+
+            # Test the list of repos is correct
+            expected_repos = ["repo1", "repo2", "repo3"]
+            self.assertEqual(repos, expected_repos)
+
+            # Test that mocked property was called once
             mock_public_repos_url.assert_called_once()
+
+            # Test that mocked get_json was called once with correct URL
             mock_get_json.assert_called_once_with(
                 "https://api.github.com/orgs/test/repos"
             )
