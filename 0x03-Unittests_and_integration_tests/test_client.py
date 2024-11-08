@@ -5,7 +5,6 @@ from unittest.mock import patch, PropertyMock, Mock
 from parameterized import parameterized, parameterized_class
 from client import GithubOrgClient
 from utils import get_json
-from fixtures import org_payload, repos_payload, expected_repos, apache2_repos
 from fixtures import TEST_PAYLOAD
 
 
@@ -17,11 +16,15 @@ class TestGithubOrgClient(unittest.TestCase):
         ("abc", {"repos_url": "https://api.github.com/orgs/abc/repos"}),
     ])
     @patch(
-        'client.get_json',
-        return_value={"repos_url": "https://api.github.com/orgs/google/repos"}
+        'client.get_json'
     )
     def test_org(self, org_name, expected, mock_get_json):
         """Test that GithubOrgClient.org returns the correct value"""
+        # Adjust the mock to return different values based on the org_name
+        mock_get_json.side_effect = lambda url: {
+            "repos_url": f"https://api.github.com/orgs/{org_name}/repos"
+        }
+
         client = GithubOrgClient(org_name)
         self.assertEqual(client.org, expected)
         mock_get_json.assert_called_once_with(
